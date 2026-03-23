@@ -64,7 +64,15 @@ class Compression:
             renamed_path = generate_rename_path(root, ext_before + ext, creation_time)
             os.rename(path_out, renamed_path)
         compress_function(path_in, path_out)
-        os.remove(path_in)
+        if os.path.exists(path_in):
+            # In some cases when we write logs to directory mounted with
+            # FUSE device using OSS (or AWS S3) + Fluid, here we may encounter:
+            # OSError: [Errno 34] Numerical result out of range,
+            # but the log file is removed successfully actually
+            try:
+                os.remove(path_in)
+            except OSError:
+                pass
 
 
 class Retention:
